@@ -8,6 +8,7 @@ This server hosts a multi-tenant HRM application with CDC ingestion.
 - CDC stack (multi-tenant): Kafka (KRaft, 3 brokers) + Debezium Connect + ingestion service (Node.js)
 - Legacy CDC stack (MySQL-based) is still running but not used for multi-tenant Postgres
 - One-command deploy helper: `/opt/PRoject/hrm/deploy.sh`
+- Uninstall helper: `/opt/PRoject/hrm/uninstall.sh`
 
 ## What I changed
 
@@ -139,6 +140,11 @@ Run from the repo root:
 
 The script prompts for domains, SMTP, AWS, and DB secrets, generates `.env` files,
 updates the frontend API URL, and starts both the core stack and CDC stack.
+
+## Documentation
+
+- `README.md` for quick start
+- `docs/ARCHITECTURE.md` for full system details and diagrams
 
 ## Useful commands
 
