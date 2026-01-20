@@ -1,0 +1,6 @@
+Hello [[${employeeName}]],
+
+Your leave for [[${leaveType}]] from [[${startDate}]] to [[${endDate}]] has been [[${status}]].
+
+Regards,
+HR Team

@@ -1,0 +1,22 @@
+package com.betopia.hrm.domain.base.entity;
+
+import jakarta.persistence.Embeddable;
+
+@Embeddable
+public class Username {
+
+    private String username;
+
+    public Username() {}
+    public Username(String username) {
+        this.username = username;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+}

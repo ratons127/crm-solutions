@@ -1,0 +1,189 @@
+version: "3.8"
+
+services:
+  traefik:
+    image: traefik:v2.11
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      - --entrypoints.websecure.address=:443
+      - --certificatesresolvers.le.acme.httpchallenge=true
+      - --certificatesresolvers.le.acme.httpchallenge.entrypoint=web
+      - --certificatesresolvers.le.acme.email=${ACME_EMAIL}
+      - --certificatesresolvers.le.acme.storage=/letsencrypt/acme.json
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - traefik_letsencrypt:/letsencrypt
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./betopia_hrm_backend-main/hrm
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_PROFILES_ACTIVE: prod
+      APP_PROTOCOL: https
+      APP_DOMAIN: ${API_DOMAIN:-api.betopialtd.com}/api
+      APP_DISABLE_SECURITY: "false"
+      APP_DISABLE_EMAIL: "false"
+      APP_FRONTEND_RESET_PASSWORD_URL: ${APP_FRONTEND_RESET_PASSWORD_URL}
+      CLOUD_AWS_CREDENTIALS_ACCESS_KEY: ${CLOUD_AWS_CREDENTIALS_ACCESS_KEY}
+      CLOUD_AWS_CREDENTIALS_SECRET_KEY: ${CLOUD_AWS_CREDENTIALS_SECRET_KEY}
+      CLOUD_AWS_REGION: ${CLOUD_AWS_REGION}
+      CLOUD_AWS_S3_BUCKET: ${CLOUD_AWS_S3_BUCKET}
+      SPRING_MAIL_HOST: ${SPRING_MAIL_HOST}
+      SPRING_MAIL_PORT: ${SPRING_MAIL_PORT}
+      SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME}
+      SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD}
+      SPRING_MAIL_FROM: ${SPRING_MAIL_FROM}
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: "true"
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: "true"
+    depends_on:
+      - postgres
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.backend.rule=Host(`${API_DOMAIN:-api.betopialtd.com}`)
+      - traefik.http.routers.backend.entrypoints=websecure
+      - traefik.http.routers.backend.tls.certresolver=le
+      - traefik.http.services.backend.loadbalancer.server.port=8080
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./betopia_hrm_frontend-main
+    depends_on:
+      - backend
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.frontend.rule=Host(`${FRONTEND_DOMAIN:-betopialtd.com}`)
+      - traefik.http.routers.frontend.entrypoints=websecure
+      - traefik.http.routers.frontend.tls.certresolver=le
+      - traefik.http.services.frontend.loadbalancer.server.port=3000
+    restart: unless-stopped
+
+  mysql-cdc:
+    image: mysql:8.0.13
+    environment:
+      MYSQL_DATABASE: ${MYSQL_CDC_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_CDC_ROOT_PASSWORD}
+    command:
+      - --server-id=1
+      - --log-bin=mysql-bin
+      - --binlog-format=ROW
+      - --binlog-row-image=FULL
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_cdc_data:/var/lib/mysql
+      - ./betopia_hrm_backend-main/debezium-connector/mysql-dump:/docker-entrypoint-initdb.d
+    restart: unless-stopped
+
+  phpmyadmin-cdc:
+    image: phpmyadmin/phpmyadmin
+    environment:
+      PMA_HOST: mysql-cdc
+      PMA_PORT: 3306
+      PMA_PMADB: ${MYSQL_CDC_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_CDC_ROOT_PASSWORD}
+    ports:
+      - "8091:80"
+    depends_on:
+      - mysql-cdc
+    restart: unless-stopped
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.1
+    environment:
+      ALLOW_ANONYMOUS_LOGIN: "yes"
+      SERVER_ID: "1"
+      ZOOKEEPER_CLIENT_PORT: "2181"
+    ports:
+      - "2181:2181"
+      - "2888:2888"
+      - "3888:3888"
+    restart: unless-stopped
+
+  kafka:
+    image: debezium/kafka:3.0.0.Final
+    environment:
+      ZOOKEEPER_CONNECT: zookeeper:2181
+      ALLOW_PLAINTEXT_LISTENER: "yes"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CLIENT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_LISTENERS: CLIENT://:9092,EXTERNAL://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: CLIENT://kafka:9092,EXTERNAL://${KAFKA_EXTERNAL_HOST}:9093
+      KAFKA_INTER_BROKER_LISTENER_NAME: CLIENT
+      BROKER_ID: "1"
+      OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
+      JMX_PORT: "9991"
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    depends_on:
+      - zookeeper
+    restart: unless-stopped
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+      KAFKA_CLUSTERS_0_READONLY: "false"
+      AUTH_TYPE: LOGIN_FORM
+      SPRING_SECURITY_USER_NAME: ${KAFKA_UI_USER}
+      SPRING_SECURITY_USER_PASSWORD: ${KAFKA_UI_PASSWORD}
+    ports:
+      - "8093:8080"
+    depends_on:
+      - kafka
+    restart: unless-stopped
+
+  debezium:
+    image: debezium/connect:3.0.0.Final
+    environment:
+      BOOTSTRAP_SERVERS: kafka:9092
+      GROUP_ID: "1"
+      CONFIG_STORAGE_TOPIC: mysql_connect_configs
+      OFFSET_STORAGE_TOPIC: mysql_connect_offsets
+      STATUS_STORAGE_TOPIC: mysql_connect_statuses
+      KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+    ports:
+      - "8094:8083"
+    depends_on:
+      - zookeeper
+      - kafka
+    restart: unless-stopped
+
+  debezium-ui:
+    image: debezium/debezium-ui:latest
+    environment:
+      KAFKA_CONNECT_URIS: http://debezium:8083
+    ports:
+      - "8095:8080"
+    depends_on:
+      - debezium
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  traefik_letsencrypt:
+  mysql_cdc_data:

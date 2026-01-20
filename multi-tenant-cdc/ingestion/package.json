@@ -1,0 +1,11 @@
+{
+  "name": "multi-tenant-ingestion",
+  "version": "1.0.0",
+  "private": true,
+  "main": "src/index.js",
+  "type": "commonjs",
+  "dependencies": {
+    "kafkajs": "^2.2.4",
+    "pg": "^8.11.5"
+  }
+}

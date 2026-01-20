@@ -1,0 +1,31 @@
+{
+  "name": "zetkco-mysql-connector-v1",
+  "config": {
+    "connector.class": "io.debezium.connector.mysql.MySqlConnector",
+    "tasks.max": "1",
+
+    "offset.storage": "org.apache.kafka.connect.storage.FileOffsetBackingStore",
+    "offset.storage.file.filename": "/tmp/offsets.dat",
+    "offset.flush.interval.ms": "60000",
+
+    "database.hostname": "localhost",
+    "database.port": "3306",
+    "database.user": "root",
+    "database.password": "1234",
+
+    "database.dbname": "hrm_db",
+    "database.include.list": "hrm_db",
+    "table.include.list": "hrm_db.iclock_transaction",
+
+    "include.schema.changes": "false",
+    "database.server.id": "10182",
+    "database.server.name": "hrm_db",
+    "database.allowPublicKeyRetrieval": "true",
+
+    "schema.history.internal.kafka.bootstrap.servers": "localhost:9092",
+    "schema.history.internal.kafka.topic": "schema-changes.hrm_db",
+
+    "decimal.handling.mode": "double",
+    "topic.prefix": "hrm_db"
+  }
+}

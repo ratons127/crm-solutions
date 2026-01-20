@@ -1,0 +1,171 @@
+{
+  "folders": [
+    {
+      "name": "🏠 Root",
+      "path": ".",
+    },
+    {
+      "name": "📱 App",
+      "path": "./app",
+    },
+    {
+      "name": "🧩 Components",
+      "path": "./app/components",
+    },
+    {
+      "name": "📄 Pages",
+      "path": "./app/(app)",
+    },
+    {
+      "name": "🔐 Auth",
+      "path": "./app/(public)",
+    },
+    {
+      "name": "🛠️ Services",
+      "path": "./app/services",
+    },
+    {
+      "name": "📝 Types",
+      "path": "./app/types",
+    },
+    {
+      "name": "📚 Library",
+      "path": "./app/lib",
+    },
+    {
+      "name": "🖼️ Public",
+      "path": "./public",
+    },
+    {
+      "name": "📜 Scripts",
+      "path": "./scripts",
+    },
+    {
+      "name": "⚙️ Config",
+      "path": "./.vscode",
+    },
+  ],
+  "settings": {
+    // Workspace-specific settings override
+    "workbench.colorCustomizations": {
+      "titleBar.activeBackground": "#F69348",
+      "titleBar.activeForeground": "#ffffff",
+      "titleBar.inactiveBackground": "#F69348CC",
+      "titleBar.inactiveForeground": "#ffffff99",
+      "statusBar.background": "#F69348",
+      "statusBar.foreground": "#ffffff",
+      "activityBar.activeBackground": "#F6934855",
+      "activityBar.activeBorder": "#F69348",
+    },
+
+    // File associations for better syntax highlighting
+    "files.associations": {
+      "*.css": "tailwindcss",
+      "*.tsx": "typescriptreact",
+      "*.ts": "typescript",
+      "*.json": "jsonc",
+    },
+
+    // Search configuration
+    "search.useGlobalIgnoreFiles": true,
+    "search.useParentIgnoreFiles": true,
+
+    // Specific file excludes for this workspace
+    "files.exclude": {
+      "**/.git": true,
+      "**/.DS_Store": true,
+      "**/node_modules": true,
+      "**/.next": true,
+      "**/out": true,
+      "**/.nyc_output": true,
+      "**/coverage": true,
+      "**/*.log": true,
+      "**/npm-debug.log*": true,
+      "**/yarn-debug.log*": true,
+      "**/yarn-error.log*": true,
+    },
+
+    // TypeScript workspace settings
+    "typescript.preferences.includePackageJsonAutoImports": "on",
+    "typescript.suggest.autoImports": true,
+    "typescript.updateImportsOnFileMove.enabled": "always",
+
+    // Better IntelliSense for this project structure
+    "typescript.preferences.importModuleSpecifier": "relative",
+    "typescript.suggest.includeCompletionsForModuleExports": true,
+
+    // Project-specific formatter settings
+    "prettier.configPath": "./.prettierrc",
+    "prettier.ignorePath": "./.prettierignore",
+
+    // Enhanced file nesting for better organization
+    "explorer.fileNesting.patterns": {
+      "*.component.tsx": "$(capture).component.css, $(capture).component.scss, $(capture).test.tsx, $(capture).stories.tsx",
+      "*.page.tsx": "$(capture).page.css, $(capture).page.scss, $(capture).test.tsx",
+      "*.layout.tsx": "$(capture).layout.css, $(capture).layout.scss",
+      "package.json": "package-lock.json, yarn.lock, pnpm-lock.yaml, .npmrc, .yarnrc",
+      "tsconfig.json": "tsconfig.*.json",
+      ".eslintrc.*": ".eslintignore, .eslintcache",
+      ".gitignore": ".gitattributes, .gitmodules, .gitmessage, .mailmap",
+      "tailwind.config.*": "postcss.config.*",
+      "next.config.*": "next-env.d.ts",
+    },
+  },
+
+  "extensions": {
+    "recommendations": [
+      "esbenp.prettier-vscode",
+      "dbaeumer.vscode-eslint",
+      "ms-vscode.vscode-typescript-next",
+      "bradlc.vscode-tailwindcss",
+      "dsznajder.es7-react-js-snippets",
+      "formulahendry.auto-close-tag",
+      "christian-kohler.path-intellisense",
+      "eamodio.gitlens",
+      "usernamehw.errorlens",
+      "pkief.material-icon-theme",
+      "zhuangtongfa.material-theme",
+    ],
+  },
+
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "🚀 Start Development",
+        "type": "npm",
+        "script": "dev",
+        "group": {
+          "kind": "build",
+          "isDefault": true,
+        },
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "panel": "new",
+        },
+        "runOptions": {
+          "runOn": "folderOpen",
+        },
+      },
+    ],
+  },
+
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "🐛 Debug Next.js",
+        "type": "node",
+        "request": "launch",
+        "program": "${workspaceFolder}/node_modules/next/dist/bin/next",
+        "args": ["dev"],
+        "cwd": "${workspaceFolder}",
+        "console": "integratedTerminal",
+        "env": {
+          "NODE_OPTIONS": "--inspect",
+        },
+      },
+    ],
+  },
+}

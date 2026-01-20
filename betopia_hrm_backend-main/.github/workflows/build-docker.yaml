@@ -1,0 +1,47 @@
+name: Build, Publish and backend Deploy Docker Image
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  publish_and_deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣ Checkout code
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 2️⃣ Set up Docker Buildx
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # 3️⃣ Log in to Docker Hub
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: aminur93
+          password: ${{ secrets.DOCKER_HUB_TOKEN_HRM_BACKEND }}
+
+      # 4️⃣ Build and Push Docker image
+      - name: Build and Push image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./hrm
+          push: true
+          tags: aminur93/hrm-solutions:hrm-backend-service-1.0.0
+
+
+      # 6️⃣ Deploy on EC2
+      - name: Deploy on EC2
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.EC2_HRM_SOLUTION_BACKEND_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_BACKEND_KEY }}
+          script: |
+            sudo bash -c "cd /root && docker-compose -f docker-compose-hrm-solutions.yaml pull && docker-compose -f docker-compose-hrm-solutions.yaml up -d"
+

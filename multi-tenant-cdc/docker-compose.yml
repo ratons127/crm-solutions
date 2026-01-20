@@ -1,0 +1,181 @@
+version: "3.8"
+
+services:
+  kafka-1:
+    image: confluentinc/cp-kafka:7.5.1
+    environment:
+      CLUSTER_ID: ${KAFKA_KRAFT_CLUSTER_ID}
+      KAFKA_CLUSTER_ID: ${KAFKA_KRAFT_CLUSTER_ID}
+      KAFKA_NODE_ID: "1"
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka-1:9093,2@kafka-2:9093,3@kafka-3:9093
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:19092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-1:9092,EXTERNAL://${KAFKA_EXTERNAL_HOST}:19092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "3"
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "3"
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: "2"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    ports:
+      - "19092:19092"
+    volumes:
+      - kafka_1_data:/bitnami/kafka
+    restart: unless-stopped
+    networks:
+      - cdc_net
+
+  kafka-2:
+    image: confluentinc/cp-kafka:7.5.1
+    environment:
+      CLUSTER_ID: ${KAFKA_KRAFT_CLUSTER_ID}
+      KAFKA_CLUSTER_ID: ${KAFKA_KRAFT_CLUSTER_ID}
+      KAFKA_NODE_ID: "2"
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka-1:9093,2@kafka-2:9093,3@kafka-3:9093
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:19093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-2:9092,EXTERNAL://${KAFKA_EXTERNAL_HOST}:19093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "3"
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "3"
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: "2"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    ports:
+      - "19093:19093"
+    volumes:
+      - kafka_2_data:/bitnami/kafka
+    restart: unless-stopped
+    networks:
+      - cdc_net
+
+  kafka-3:
+    image: confluentinc/cp-kafka:7.5.1
+    environment:
+      CLUSTER_ID: ${KAFKA_KRAFT_CLUSTER_ID}
+      KAFKA_CLUSTER_ID: ${KAFKA_KRAFT_CLUSTER_ID}
+      KAFKA_NODE_ID: "3"
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka-1:9093,2@kafka-2:9093,3@kafka-3:9093
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:19094
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-3:9092,EXTERNAL://${KAFKA_EXTERNAL_HOST}:19094
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "3"
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "3"
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: "2"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    ports:
+      - "19094:19094"
+    volumes:
+      - kafka_3_data:/bitnami/kafka
+    restart: unless-stopped
+    networks:
+      - cdc_net
+
+  debezium-connect:
+    image: debezium/connect:3.0.0.Final
+    environment:
+      BOOTSTRAP_SERVERS: kafka-1:9092,kafka-2:9092,kafka-3:9092
+      GROUP_ID: "1"
+      CONFIG_STORAGE_TOPIC: connect_configs
+      OFFSET_STORAGE_TOPIC: connect_offsets
+      STATUS_STORAGE_TOPIC: connect_statuses
+      KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      KEY_CONVERTER_SCHEMAS_ENABLE: "false"
+      VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+      REST_ADVERTISED_HOST_NAME: debezium-connect
+    ports:
+      - "18083:8083"
+    depends_on:
+      - kafka-1
+      - kafka-2
+      - kafka-3
+    restart: unless-stopped
+    networks:
+      - cdc_net
+      - hrm_default
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    environment:
+      KAFKA_CLUSTERS_0_NAME: kraft
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka-1:9092,kafka-2:9092,kafka-3:9092
+      KAFKA_CLUSTERS_0_READONLY: "false"
+      AUTH_TYPE: LOGIN_FORM
+      SPRING_SECURITY_USER_NAME: ${KAFKA_UI_USER}
+      SPRING_SECURITY_USER_PASSWORD: ${KAFKA_UI_PASSWORD}
+    ports:
+      - "18093:8080"
+    depends_on:
+      - kafka-1
+      - kafka-2
+      - kafka-3
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.kafka-ui.rule=Host(`${KAFKA_UI_DOMAIN:-kafka.betopialtd.com}`)
+      - traefik.http.routers.kafka-ui.entrypoints=websecure
+      - traefik.http.routers.kafka-ui.tls.certresolver=le
+      - traefik.http.services.kafka-ui.loadbalancer.server.port=8080
+    restart: unless-stopped
+    networks:
+      - cdc_net
+      - hrm_default
+
+  debezium-ui:
+    image: debezium/debezium-ui:latest
+    environment:
+      KAFKA_CONNECT_URIS: http://debezium-connect:8083
+    ports:
+      - "18095:8080"
+    depends_on:
+      - debezium-connect
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.debezium-ui.rule=Host(`${DEBEZIUM_UI_DOMAIN:-debezium.betopialtd.com}`)
+      - traefik.http.routers.debezium-ui.entrypoints=websecure
+      - traefik.http.routers.debezium-ui.tls.certresolver=le
+      - traefik.http.services.debezium-ui.loadbalancer.server.port=8080
+    restart: unless-stopped
+    networks:
+      - cdc_net
+      - hrm_default
+
+  ingestion:
+    build:
+      context: ./ingestion
+    environment:
+      KAFKA_BROKERS: kafka-1:9092,kafka-2:9092,kafka-3:9092
+      KAFKA_TOPIC_PATTERN: ^tenant_.+
+      TENANT_PREFIX: tenant_
+      TENANTS: ${TENANTS}
+      AUTO_CREATE_TENANTS: "true"
+      PGHOST: ${PGHOST}
+      PGPORT: ${PGPORT}
+      PGDATABASE: ${PGDATABASE}
+      PGUSER: ${PGUSER}
+      PGPASSWORD: ${PGPASSWORD}
+      PGSSL: ${PGSSL}
+    depends_on:
+      - kafka-1
+      - kafka-2
+      - kafka-3
+    restart: unless-stopped
+    networks:
+      - cdc_net
+      - hrm_default
+
+volumes:
+  kafka_1_data:
+  kafka_2_data:
+  kafka_3_data:
+
+networks:
+  cdc_net:
+    driver: bridge
+  hrm_default:
+    external: true
