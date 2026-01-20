@@ -22,6 +22,8 @@ The script will:
 - CDC stack: Kafka (KRaft) + Debezium Connect + Ingestion service (Node.js)
 
 See full details and diagrams in `docs/ARCHITECTURE.md`.
+Tenant onboarding: `docs/TENANT_ONBOARDING.md`
+Troubleshooting: `docs/TROUBLESHOOTING.md`
 
 ## Core services
 
