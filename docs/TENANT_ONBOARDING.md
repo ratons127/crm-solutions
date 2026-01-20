@@ -107,9 +107,11 @@ If you use the UI instead of the script, fill:
 
 ## Screenshots
 
-Add your screenshots here:
-- Debezium UI connector form
-- Kafka UI topic list
-- CDC events in central Postgres
+Add your screenshots here (place files in `docs/images/`):
 
-(Place images in `docs/images/` and link them here.)
+- Debezium UI connector form  
+  `![Debezium UI connector](images/debezium-connector-form.png)`
+- Kafka UI topic list  
+  `![Kafka UI topics](images/kafka-topics.png)`
+- CDC events in central Postgres  
+  `![CDC events](images/tenant-cdc-events.png)`
