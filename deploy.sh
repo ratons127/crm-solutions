@@ -59,6 +59,7 @@ fi
 API_DOMAIN=$(prompt "API domain" "api.${FRONTEND_DOMAIN}")
 KAFKA_UI_DOMAIN=$(prompt "Kafka UI domain" "kafka.${FRONTEND_DOMAIN}")
 DEBEZIUM_UI_DOMAIN=$(prompt "Debezium UI domain" "debezium.${FRONTEND_DOMAIN}")
+PGADMIN_DOMAIN=$(prompt "pgAdmin domain" "pgadmin.${FRONTEND_DOMAIN}")
 ACME_EMAIL=$(prompt "ACME email" "admin@${FRONTEND_DOMAIN}")
 
 POSTGRES_DB=$(prompt "Postgres DB name" "betopia_hrm")
@@ -79,6 +80,9 @@ AWS_BUCKET=$(prompt "AWS S3 bucket" "")
 KAFKA_EXTERNAL_HOST=$(prompt "Public IP/host for Kafka external" "${PUBLIC_IP}")
 KAFKA_UI_USER=$(prompt "Kafka UI user" "admin")
 KAFKA_UI_PASSWORD=$(prompt_secret "Kafka UI password")
+
+PGADMIN_EMAIL=$(prompt "pgAdmin email" "admin@${FRONTEND_DOMAIN}")
+PGADMIN_PASSWORD=$(prompt_secret "pgAdmin password")
 
 MYSQL_CDC_DATABASE=$(prompt "MySQL CDC database (optional)" "betopia_hrm")
 MYSQL_CDC_ROOT_PASSWORD=$(prompt_secret "MySQL CDC root password (optional)")
@@ -115,6 +119,9 @@ MYSQL_CDC_ROOT_PASSWORD=${MYSQL_CDC_ROOT_PASSWORD}
 KAFKA_EXTERNAL_HOST=${KAFKA_EXTERNAL_HOST}
 KAFKA_UI_USER=${KAFKA_UI_USER}
 KAFKA_UI_PASSWORD=${KAFKA_UI_PASSWORD}
+PGADMIN_EMAIL=${PGADMIN_EMAIL}
+PGADMIN_PASSWORD=${PGADMIN_PASSWORD}
+PGADMIN_DOMAIN=${PGADMIN_DOMAIN}
 ENV
 
 cat <<ENV > "${ROOT_DIR}/multi-tenant-cdc/.env"
@@ -161,5 +168,6 @@ echo "- ${FRONTEND_DOMAIN}"
 echo "- ${API_DOMAIN}"
 echo "- ${KAFKA_UI_DOMAIN}"
 echo "- ${DEBEZIUM_UI_DOMAIN}"
+echo "- ${PGADMIN_DOMAIN}"
 echo
 echo "Once DNS propagates, HTTPS will auto-issue via Let's Encrypt."

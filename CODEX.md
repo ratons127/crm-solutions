@@ -9,6 +9,7 @@ This server hosts a multi-tenant HRM application with CDC ingestion.
 - Legacy CDC stack (MySQL-based) is still running but not used for multi-tenant Postgres
 - One-command deploy helper: `/opt/PRoject/hrm/deploy.sh`
 - Uninstall helper: `/opt/PRoject/hrm/uninstall.sh`
+- pgAdmin available at `PGADMIN_DOMAIN` (configured in `.env`)
 
 ## What I changed
 

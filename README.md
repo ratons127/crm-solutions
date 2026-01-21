@@ -31,6 +31,7 @@ Troubleshooting: `docs/TROUBLESHOOTING.md`
 - API: `https://<API_DOMAIN>`
 - Kafka UI: `https://<KAFKA_UI_DOMAIN>`
 - Debezium UI: `https://<DEBEZIUM_UI_DOMAIN>`
+- pgAdmin: `https://<PGADMIN_DOMAIN>`
 
 ## Important files
 
