@@ -1,0 +1,13 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "Betopia HRM Postgres",
+      "Group": "Servers",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "betopia_hrm",
+      "Username": "betopia",
+      "SSLMode": "prefer"
+    }
+  }
+}

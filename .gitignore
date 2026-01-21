@@ -28,3 +28,6 @@ backups/
 *.pem
 *.key
 *.crt
+
+# pgAdmin secrets
+pgadmin/.pgpass
