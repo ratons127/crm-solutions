@@ -25,6 +25,7 @@ See full details and diagrams in `docs/ARCHITECTURE.md`.
 Tenant onboarding: `docs/TENANT_ONBOARDING.md`
 Troubleshooting: `docs/TROUBLESHOOTING.md`
 Admin guide: `docs/ADMIN_GUIDE.md`
+Load testing: `OPERATIONS.md`
 
 ## Core services
 

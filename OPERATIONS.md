@@ -91,3 +91,20 @@ docker logs -f hrm-frontend-1
 docker logs -f multi-tenant-cdc-debezium-connect-1
 docker logs -f multi-tenant-cdc-ingestion-1
 ```
+
+## 10) Load testing
+
+Run the k6 load test:
+```
+/opt/PRoject/hrm/scripts/loadtest/run-loadtest.sh
+```
+
+Environment overrides:
+```
+BASE_API=https://api.example.com/api
+IDENTIFIER=admin@example.com
+PASSWORD=StrongPass
+API_VUS=500
+UI_VUS=25
+AUTH_VUS=5
+```

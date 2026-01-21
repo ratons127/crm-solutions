@@ -66,6 +66,17 @@ ACME_EMAIL=$(prompt "ACME email" "admin@${FRONTEND_DOMAIN}")
 POSTGRES_DB=$(prompt "Postgres DB name" "betopia_hrm")
 POSTGRES_USER=$(prompt "Postgres user" "betopia")
 POSTGRES_PASSWORD=$(prompt_secret "Postgres password")
+POSTGRES_MAX_CONNECTIONS=$(prompt "Postgres max connections" "200")
+POSTGRES_SHARED_BUFFERS=$(prompt "Postgres shared_buffers" "2GB")
+POSTGRES_WORK_MEM=$(prompt "Postgres work_mem" "16MB")
+POSTGRES_MAINTENANCE_WORK_MEM=$(prompt "Postgres maintenance_work_mem" "256MB")
+POSTGRES_EFFECTIVE_CACHE_SIZE=$(prompt "Postgres effective_cache_size" "6GB")
+
+HIKARI_MAX_POOL_SIZE=$(prompt "Backend Hikari max pool size" "50")
+HIKARI_MIN_IDLE=$(prompt "Backend Hikari min idle" "10")
+HIKARI_CONN_TIMEOUT_MS=$(prompt "Backend Hikari connection timeout (ms)" "30000")
+HIKARI_IDLE_TIMEOUT_MS=$(prompt "Backend Hikari idle timeout (ms)" "600000")
+HIKARI_MAX_LIFETIME_MS=$(prompt "Backend Hikari max lifetime (ms)" "1800000")
 
 SMTP_HOST=$(prompt "SMTP host" "smtp.gmail.com")
 SMTP_PORT=$(prompt "SMTP port" "587")
@@ -85,6 +96,8 @@ KAFKA_UI_PASSWORD=$(prompt_secret "Kafka UI password")
 PGADMIN_EMAIL=$(prompt "pgAdmin email" "admin@${FRONTEND_DOMAIN}")
 PGADMIN_PASSWORD=$(prompt_secret "pgAdmin password")
 
+BACKEND_REPLICAS=$(prompt "Backend replicas" "2")
+
 MYSQL_CDC_DATABASE=$(prompt "MySQL CDC database (optional)" "betopia_hrm")
 MYSQL_CDC_ROOT_PASSWORD=$(prompt_secret "MySQL CDC root password (optional)")
 
@@ -102,6 +115,17 @@ API_DOMAIN=${API_DOMAIN}
 POSTGRES_DB=${POSTGRES_DB}
 POSTGRES_USER=${POSTGRES_USER}
 POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+POSTGRES_MAX_CONNECTIONS=${POSTGRES_MAX_CONNECTIONS}
+POSTGRES_SHARED_BUFFERS=${POSTGRES_SHARED_BUFFERS}
+POSTGRES_WORK_MEM=${POSTGRES_WORK_MEM}
+POSTGRES_MAINTENANCE_WORK_MEM=${POSTGRES_MAINTENANCE_WORK_MEM}
+POSTGRES_EFFECTIVE_CACHE_SIZE=${POSTGRES_EFFECTIVE_CACHE_SIZE}
+
+HIKARI_MAX_POOL_SIZE=${HIKARI_MAX_POOL_SIZE}
+HIKARI_MIN_IDLE=${HIKARI_MIN_IDLE}
+HIKARI_CONN_TIMEOUT_MS=${HIKARI_CONN_TIMEOUT_MS}
+HIKARI_IDLE_TIMEOUT_MS=${HIKARI_IDLE_TIMEOUT_MS}
+HIKARI_MAX_LIFETIME_MS=${HIKARI_MAX_LIFETIME_MS}
 
 SPRING_MAIL_HOST=${SMTP_HOST}
 SPRING_MAIL_PORT=${SMTP_PORT}
@@ -178,7 +202,7 @@ fi
 
 echo "Starting core services..."
 cd "${ROOT_DIR}"
-docker compose up -d --build
+docker compose up -d --build --scale backend=${BACKEND_REPLICAS}
 
 echo "Starting CDC stack..."
 cd "${ROOT_DIR}/multi-tenant-cdc"

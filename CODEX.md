@@ -66,6 +66,9 @@ This server hosts a multi-tenant HRM application with CDC ingestion.
   - Weekly full dump Sunday 03:00
   - Retention: 30 days
 
+### Load testing
+- k6 scripts: `/opt/PRoject/hrm/scripts/loadtest`
+
 ## How the system works (high level)
 
 1) Client DB (Postgres or MSSQL) receives attendance records.
