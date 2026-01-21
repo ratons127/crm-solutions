@@ -2,6 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PGADMIN_DIR="${ROOT_DIR}/pgadmin"
 
 prompt() {
   local label="$1"
@@ -91,6 +92,8 @@ APP_FRONTEND_RESET_PASSWORD_URL="https://${FRONTEND_DOMAIN}/auth"
 
 KAFKA_KRAFT_CLUSTER_ID=$(docker run --rm confluentinc/cp-kafka:7.5.1 kafka-storage random-uuid)
 
+mkdir -p "${PGADMIN_DIR}"
+
 cat <<ENV > "${ROOT_DIR}/.env"
 ACME_EMAIL=${ACME_EMAIL}
 FRONTEND_DOMAIN=${FRONTEND_DOMAIN}
@@ -150,6 +153,25 @@ else
   echo "NEXT_PUBLIC_API_URL=${API_URL}" >> "${FRONTEND_ENV}"
 fi
 
+cat <<JSON > "${PGADMIN_DIR}/servers.json"
+{
+  "Servers": {
+    "1": {
+      "Name": "Betopia HRM Postgres",
+      "Group": "Servers",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "${POSTGRES_DB}",
+      "Username": "${POSTGRES_USER}",
+      "SSLMode": "prefer"
+    }
+  }
+}
+JSON
+
+printf "%s:%s:%s:%s:%s\n" "postgres" "5432" "${POSTGRES_DB}" "${POSTGRES_USER}" "${POSTGRES_PASSWORD}" > "${PGADMIN_DIR}/.pgpass"
+chmod 600 "${PGADMIN_DIR}/.pgpass"
+
 if ! grep -q '^NEXT_PUBLIC_MVP_ENABLED=' "${FRONTEND_ENV}"; then
   echo "NEXT_PUBLIC_MVP_ENABLED=true" >> "${FRONTEND_ENV}"
 fi
@@ -171,3 +193,4 @@ echo "- ${DEBEZIUM_UI_DOMAIN}"
 echo "- ${PGADMIN_DOMAIN}"
 echo
 echo "Once DNS propagates, HTTPS will auto-issue via Let's Encrypt."
+echo "pgAdmin auto-connect is configured for the central Postgres."
